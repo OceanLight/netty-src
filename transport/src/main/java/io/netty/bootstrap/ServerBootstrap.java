@@ -77,15 +77,16 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      * {@link EventLoopGroup}'s are used to handle all the events and IO for {@link ServerChannel} and
      * {@link Channel}'s.
      */
+
     public ServerBootstrap group(EventLoopGroup parentGroup, EventLoopGroup childGroup) {
-        super.group(parentGroup);
+        super.group(parentGroup); //todo group对象
         if (childGroup == null) {
             throw new NullPointerException("childGroup");
         }
         if (this.childGroup != null) {
             throw new IllegalStateException("childGroup set already");
         }
-        this.childGroup = childGroup;
+        this.childGroup = childGroup; //todo childGroup对象，可以与group是相同的对象。
         return this;
     }
 
@@ -145,9 +146,13 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         return childGroup;
     }
 
+    //todo 初始化NioServerSocketChannel
+    //todo 第一次调用addLast时，registered=false, 同步调用handler的handlerAdded方法。 基于handler构造了Ctx
+
     @Override
     void init(Channel channel) throws Exception {
         final Map<ChannelOption<?>, Object> options = options();
+        //todo channel常用NioServerSocketChannel， channel.config().setOption
         synchronized (options) {
             setChannelOptions(channel, options, logger);
         }
@@ -160,7 +165,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 channel.attr(key).set(e.getValue());
             }
         }
-
+        //todo channel的pipeline()
         ChannelPipeline p = channel.pipeline();
 
         final EventLoopGroup currentChildGroup = childGroup;
@@ -173,7 +178,10 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         synchronized (childAttrs) {
             currentChildAttrs = childAttrs.entrySet().toArray(newAttrArray(childAttrs.size()));
         }
-
+        //todo pipeline 添加ChannelHandler，首次注册时调用callHandlerCallbackLater。初始化pipeline.pendingHandlerCallbackHead对象
+        //todo pipeline 添加handler-ServerBootstrapAcceptor
+        //todo 第一次调用addLast时，registered=false, 同步调用handler的handlerAdded方法->initChannel。 基于handler构造了Ctx
+        //todo pipeline ChannelInitializer->LogHandler->ServerBootstrapAcceptor
         p.addLast(new ChannelInitializer<Channel>() {
             @Override
             public void initChannel(final Channel ch) throws Exception {
@@ -182,7 +190,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 if (handler != null) {
                     pipeline.addLast(handler);
                 }
-
+                //todo 提交事件, eventLoop addTask,启动childGroup
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
@@ -245,7 +253,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 }
             };
         }
-
+        //todo 处理socketChannel的核心逻辑。childGroup添加child-channel。
         @Override
         @SuppressWarnings("unchecked")
         public void channelRead(ChannelHandlerContext ctx, Object msg) {

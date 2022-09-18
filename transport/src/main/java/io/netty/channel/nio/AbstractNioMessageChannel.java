@@ -48,7 +48,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
     private final class NioMessageUnsafe extends AbstractNioUnsafe {
 
         private final List<Object> readBuf = new ArrayList<Object>();
-
+        //todo NioServerSocketChannel read()
         @Override
         public void read() {
             assert eventLoop().inEventLoop();
@@ -89,7 +89,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                 }
                 setReadPending(false);
                 int size = readBuf.size();
-                for (int i = 0; i < size; i ++) {
+                for (int i = 0; i < size; i ++) { //todo pipeline处理nioSocketChanel, 由ServerBootStrap处理。
                     pipeline.fireChannelRead(readBuf.get(i));
                 }
 

@@ -208,7 +208,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         }
         return isTerminated();
     }
-
+    //todo 牛逼的2的指数判断。
     private static boolean isPowerOfTwo(int val) {
         return (val & -val) == val;
     }
@@ -216,7 +216,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     private interface EventExecutorChooser {
         EventExecutor next();
     }
-
+    //todo -的优先级高于&
     private final class PowerOfTwoEventExecutorChooser implements EventExecutorChooser {
         @Override
         public EventExecutor next() {

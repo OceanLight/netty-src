@@ -136,7 +136,8 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     private volatile int ioRatio = 50;
     private int cancelledKeys;
     private boolean needsToSelectAgain;
-
+    //todo 生成taskQueue，类型BlockingQueue的size，默认最大为16
+    //todo 生成Thread运行NioEventLoop对象的run方法
     NioEventLoop(NioEventLoopGroup parent, ThreadFactory threadFactory, SelectorProvider selectorProvider,
                  SelectStrategy strategy, RejectedExecutionHandler rejectedExecutionHandler) {
         super(parent, threadFactory, false, DEFAULT_MAX_PENDING_TASKS, rejectedExecutionHandler);
@@ -398,11 +399,12 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
         logger.info("Migrated " + nChannels + " channel(s) to the new Selector.");
     }
-
+    //todo nioEventLoop 核心方法
     @Override
     protected void run() {
         for (;;) {
             try {
+                //todo 调用select
                 switch (selectStrategy.calculateStrategy(selectNowSupplier, hasTasks())) {
                     case SelectStrategy.CONTINUE:
                         continue;
@@ -457,8 +459,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 } else {
                     final long ioStartTime = System.nanoTime();
                     try {
+                        //todo 处理io
                         processSelectedKeys();
                     } finally {
+                        //todo 运行task， 运行时间 io:task = ioRatio:(100 - ioRatio)
                         // Ensure we always run tasks.
                         final long ioTime = System.nanoTime() - ioStartTime;
                         runAllTasks(ioTime * (100 - ioRatio) / ioRatio);

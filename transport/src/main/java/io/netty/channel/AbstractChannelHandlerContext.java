@@ -798,7 +798,7 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap impleme
             writeAndFlush(msg, promise);
         }
     }
-
+    //todo 核心的write方法。
     private void write(Object msg, boolean flush, ChannelPromise promise) {
         AbstractChannelHandlerContext next = findContextOutbound();
         EventExecutor executor = next.executor();
@@ -924,7 +924,7 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap impleme
         return false;
     }
 
-    private AbstractChannelHandlerContext findContextInbound() {
+    private AbstractChannelHandlerContext findContextInbound() { //todo 找到下一个inbound的ctx
         AbstractChannelHandlerContext ctx = this;
         do {
             ctx = ctx.next;

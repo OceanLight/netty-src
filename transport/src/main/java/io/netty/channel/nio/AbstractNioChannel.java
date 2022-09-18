@@ -54,7 +54,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     private static final ClosedChannelException DO_CLOSE_CLOSED_CHANNEL_EXCEPTION = ThrowableUtil.unknownStackTrace(
             new ClosedChannelException(), AbstractNioChannel.class, "doClose()");
 
-    private final SelectableChannel ch;
+    private final SelectableChannel ch; //todo NIO Channel
     protected final int readInterestOp;
     volatile SelectionKey selectionKey;
     private volatile boolean inputShutdown;
@@ -80,6 +80,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         this.ch = ch;
         this.readInterestOp = readInterestOp;
         try {
+            //todo 非阻塞
             ch.configureBlocking(false);
         } catch (IOException e) {
             try {
@@ -307,7 +308,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
             // Flush immediately only when there's no pending flush.
             // If there's a pending flush operation, event loop will call forceFlush() later,
             // and thus there's no need to call it now.
-            if (isFlushPending()) {
+            if (isFlushPending()) { //todo 有读事件
                 return;
             }
             super.flush0();

@@ -62,7 +62,8 @@ public abstract class ChannelInitializer<C extends Channel> extends ChannelInbou
      * will be removed from the {@link ChannelPipeline} of the {@link Channel}.
      *
      * @param ch            the {@link Channel} which was registered.
-     * @throws Exception    is thrown if an error occurs. In that case it will be handled by
+     * @throws Exception
+     * is thrown if an error occurs. In that case it will be handled by
      *                      {@link #exceptionCaught(ChannelHandlerContext, Throwable)} which will by default close
      *                      the {@link Channel}.
      */

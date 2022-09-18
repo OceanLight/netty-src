@@ -132,6 +132,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                         readPendingReset = true;
                         setReadPending(false);
                     }
+                    //todo 读取数据。
                     pipeline.fireChannelRead(byteBuf);
                     byteBuf = null;
 
@@ -154,7 +155,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                         break;
                     }
                 } while (++ messages < maxMessagesPerRead);
-
+                //todo ServerSocketChannel注册读事件，SocketChannel 调用flush0将 iobuffer中的数据发出。完成读写。
                 pipeline.fireChannelReadComplete();
                 allocHandle.record(totalReadAmount);
 

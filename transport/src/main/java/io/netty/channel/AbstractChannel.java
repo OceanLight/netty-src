@@ -438,7 +438,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 }
             }
         }
-
+        //todo 核心注册方法， 异步方法中传入promise-Future, 就绪后setSuccess, 相当于异步通知。
         private void register0(ChannelPromise promise) {
             try {
                 // check if the channel is still open as it could be closed in the mean time when the register
@@ -447,6 +447,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                     return;
                 }
                 boolean firstRegistration = neverRegistered;
+                //todo 向ServerSocketChannel注册Selector, 但未注册监听事件。
                 doRegister();
                 neverRegistered = false;
                 registered = true;
@@ -455,10 +456,11 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 // user may already fire events through the pipeline in the ChannelFutureListener.
                 pipeline.invokeHandlerAddedIfNeeded();
 
-                safeSetSuccess(promise);
-                pipeline.fireChannelRegistered();
+                safeSetSuccess(promise); //todo 完成以后setSuccess告知。
+                pipeline.fireChannelRegistered(); //todo logHandler中仅打印日志 - channelRegistered
                 // Only fire a channelActive if the channel has never been registered. This prevents firing
                 // multiple channel actives if the channel is deregistered and re-registered.
+                //todo 第一调用时为false
                 if (isActive()) {
                     if (firstRegistration) {
                         pipeline.fireChannelActive();
@@ -477,7 +479,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 safeSetFailure(promise, t);
             }
         }
-
+        //todo channel bind
         @Override
         public final void bind(final SocketAddress localAddress, final ChannelPromise promise) {
             assertEventLoop();
@@ -507,7 +509,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 closeIfClosed();
                 return;
             }
-
+            //todo 提交事件， bind完成后 还为就绪，在添加事件触发fileChannelActive
             if (!wasActive && isActive()) {
                 invokeLater(new Runnable() {
                     @Override

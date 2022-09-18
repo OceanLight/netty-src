@@ -269,12 +269,17 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     private ChannelFuture doBind(final SocketAddress localAddress) {
+        //todo initAndRegister-构造ChannelFuture 并创建Channel-NioServerSocketChannel对象。 构造NioServerSocketChannel, channel包含NioMessageUnsafe和DefaultChannelPipeline
+        //todo initAndRegister-register, 监听accept事件
+        //todo register0方法异步执行，交给EventLoop去执行，返回Future。
+        //todo Future 通过setSuccess 更新状态，并调用listener的方法。
         final ChannelFuture regFuture = initAndRegister();
         final Channel channel = regFuture.channel();
         if (regFuture.cause() != null) {
             return regFuture;
         }
-
+        //todo isDone不阻塞。 Future就绪说明注册完成，可以执行端口绑定。并监听accept事件。 如果未就绪，提交异步任务等待future就绪后执行即可。
+        //todo doBind0 核心方法。bind完成后 异步调用pipeline.fireChannelActive, 注册accept事件
         if (regFuture.isDone()) {
             // At this point we know that the registration was complete and successful.
             ChannelPromise promise = channel.newPromise();
@@ -282,6 +287,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             return promise;
         } else {
             // Registration future is almost always fulfilled already, but just in case it's not.
+            // todo channel 生成PendingRegistrationPromise，交给线程执行。
             final PendingRegistrationPromise promise = new PendingRegistrationPromise(channel);
             regFuture.addListener(new ChannelFutureListener() {
                 @Override
@@ -305,9 +311,15 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     final ChannelFuture initAndRegister() {
+        //todo 构造NioServerSocketChannel
         Channel channel = null;
         try {
+            //todo 同步方法 构造NioServerSocketChannel, channel包含NioMessageUnsafe和DefaultChannelPipeline
             channel = channelFactory().newChannel();
+            //todo pipeline 添加handler， 首次注册时调用callHandlerCallbackLater。初始化pipeline.pendingHandlerCallbackHead对象
+            //todo pipeline 添加handler - ServerBootstrapAcceptor
+            //todo 第一次调用pipeLine.addLast时，registered=false, 同步调用handler的handlerAdded方法。 基于handler构造了Ctx
+
             init(channel);
         } catch (Throwable t) {
             if (channel != null) {
@@ -319,7 +331,11 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             // as the Channel is not registered yet we need to force the usage of the GlobalEventExecutor
             return new DefaultChannelPromise(new FailedChannel(), GlobalEventExecutor.INSTANCE).setFailure(t);
         }
-
+        //todo 异步初始化bootStrap中的group中挑一个EventLoop。 注册这个NioServerSocketChannel， 用于处理accept请求。
+        //todo 用主线程执行其他线程的函数，用Thread.currentThread() 和 this对象进行比较，前者获取当前执行的线程的对象，后者返回操作线程对象。
+        //todo 调用线程对象的execute(Runnable task)方法注册异步事件，如果用main方法执行，则启动线程，并将task加入queue中。
+        //todo 方法传入execute(Runnable)的方案，通过匿名Runnable对象，调用线程对象的execute(new Runnable() {public void run() { register0(promise); } })
+        //todo ChannelFuture: DefaultChannelPromise 包含executor： NioEventLoop 和 NioServerSocketChannel
         ChannelFuture regFuture = group().register(channel);
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {
@@ -349,6 +365,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
 
         // This method is invoked before channelRegistered() is triggered.  Give user handlers a chance to set up
         // the pipeline in its channelRegistered() implementation.
+        //todo 提交事件，SingleThreadEventExecutor 将runnable执行对象提交executor的执行队列中。绑定端口
         channel.eventLoop().execute(new Runnable() {
             @Override
             public void run() {

@@ -202,6 +202,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             // If the registered is false it means that the channel was not registered on an eventloop yet.
             // In this case we add the context to the pipeline and add a task that will call
             // ChannelHandler.handlerAdded(...) once the channel is registered.
+            //todo 第一次调用addLast时，registered=false, 同步调用handler的handlerAdded方法。 基于handler构造了Ctx
             if (!registered) {
                 newCtx.setAddPending();
                 callHandlerCallbackLater(newCtx, true);
@@ -220,7 +221,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                 return this;
             }
         }
-        callHandlerAdded0(newCtx);
+        callHandlerAdded0(newCtx); //todo 每次addHandler时触发 此handler.handlerAdded()
         return this;
     }
 

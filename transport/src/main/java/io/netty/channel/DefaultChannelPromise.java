@@ -48,6 +48,7 @@ public class DefaultChannelPromise extends DefaultPromise<Void> implements Chann
      * @param channel
      *        the {@link Channel} associated with this future
      */
+    //todo 默认的ChannelFuture
     public DefaultChannelPromise(Channel channel, EventExecutor executor) {
         super(executor);
         this.channel = checkNotNull(channel, "channel");
